@@ -1,0 +1,545 @@
+#!/usr/bin/env python3
+## -*- coding: utf-8 -*-
+#
+import argparse
+import functools as ft
+import random
+import re
+import sys
+import typing as ty
+
+import cards
+import deck
+import parse_sol_cmds as psc
+
+BREAK_STRING \
+    = '\n-------------------------------------------------------------------'
+
+COLOR_RED='[31;1m'
+COLOR_GREEN='[32;1m'
+COLOR_YELLOW='[33;1m'
+COLOR_BLUE='[34;1m'
+COLOR_MAGENTA='[35;1m'
+COLOR_CYAN='[36;1m'
+
+COLOR_RED_BOLD='[31;1m'
+COLOR_GREEN_BOLD='[32;1m'
+COLOR_YELLOW_BOLD='[33;1m'
+COLOR_BLUE_BOLD='[34;1m'
+COLOR_MAGENTA_BOLD='[35;1m'
+COLOR_CYAN_BOLD='[36;1m'
+COLOR_NONE='[0m'
+
+UNDER='[4m'
+
+_lfd = None
+def set_log_file(lfd):
+    global _lfd
+    _lfd = lfd
+    return None
+
+def logit(*args) -> None:
+    print(*args, file=_lfd, flush=True)
+    return None
+
+def plogit(*args) -> None:
+    print(*args, file=_lfd, flush=True)
+    print(*args, file=sys.stdout)
+    return None
+
+class Card():
+    CardMap = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
+               8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
+
+    class Suits(enum.IntEnum):
+        SPADE = enum.auto() 
+        HEART = enum.auto() 
+        DIAMOND = enum.auto() 
+        CLUB = enum.auto() 
+
+    _suit_map = {
+        SPADE : 'spade',
+        HEART : 'heart',
+        DIAMOND : 'diamod',
+        CLUB : 'club',
+    }
+
+    #Suits = {'club', 'diamond', 'spade', 'heart'}
+    RedSuits = {Suits.DIAMOND, Suits.HEART}
+    BlackSuits = {Suits.SPADE, Suits.CLUB}
+    Symbols = {Suits.SPADE:'\u2660',
+               Suits.HEART:'\u2661',
+               Suits.DIAMOND:'\u2662',
+               Suits.CLUB:'\u2663'} 
+
+    def __init__(self, value: int, suit: Suits):
+        self._name = self.CardMap[value]
+        self._suit = suit
+        self._color = COLOR_RED if suit in Card.RedSuits else COLOR_BLUE
+        self.title \
+            = f'{self._color}{self._name}{Card.Symbols[self._suit]}{COLOR_NONE}'
+        self.value = value
+
+    def below(self, card):
+        return self.value == (card.value - 1)
+
+    def opposite_color(self, card):
+        #if self._suit == 'club' or self._suit == 'spade':
+        # TODO(epr): no reason to check twice
+        if self._suit in Card.BlackSuits:
+            return card._suit in Card.RedSuits
+        return card._suit in Card.BlackSuits
+
+    def attaches(self, card):
+        if card.below(self) and card.opposite_color(self):
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return self.title
+
+class Deck():
+    unshuffled_deck = [Card(card, suit)
+                        for card in range(1, 14)
+                            for suit in Card.Suits]
+
+    def __init__(self, seed=0):
+        # TODO set the seed to duplicate shuffle
+        self.deck = self.unshuffled_deck
+        random.shuffle(self.deck)
+
+    def Flip_card(self):
+        return self.deck.pop()
+
+    def deal_cards(self, num_cards: int = -1):
+        if num_cards == -1:
+            num_cards = len(self.deck)
+        return [self.deck.pop() for x in range(0, num_cards)]
+
+    def __str__(self) -> str:
+        cardsstr = ', '.join([str(c) for c in self.deck])
+        return f'{str(len(self.deck))}: {cardsstr}'
+        
+class Tableau():
+    ''' Class that keeps track of the seven piles of cards on the Tableau
+    '''
+    Columns = 7
+
+    def __init__(self, card_list):
+        self.unflipped = {x: card_list[x] for x in range(Tableau.Columns)}
+        self.flipped = {x: [self.unflipped[x].pop()]
+                        for x in range(Tableau.Columns)}
+
+    def flip_card(self, col):
+        ''' Flips a card under column col on the Tableau '''
+        if len(self.unflipped[col]) > 0:
+            self.flipped[col].append(self.unflipped[col].pop())
+
+    def pile_length(self):
+        ''' Returns the length of the longest pile on the Tableau
+        '''
+        return max([len(self.flipped[x]) + len(self.unflipped[x])
+                        for x in range(Tableau.Columns)])
+
+    def add_cards(self, cards, column):
+        ''' Returns true if cards were successfully
+                added to column on the Tableau.
+            else false
+        '''
+        column_cards = self.flipped[column]
+        if len(column_cards) == 0 and cards[0].value == 13:
+            column_cards.extend(cards)
+            return True
+        elif len(column_cards) > 0 and column_cards[-1].attaches(cards[0]):
+            column_cards.extend(cards)
+            return True
+        return False
+
+    def tableau_to_tableau(self, c1, c2):
+        ''' Returns True if any card(s) are successfully moved from
+            c1 to c2 on the Tableau, returns False otherwise.
+        '''
+        c1_cards = self.flipped[c1]
+
+        for index in range(len(c1_cards)):
+            if self.add_cards(c1_cards[index:], c2):
+                self.flipped[c1] = c1_cards[0:index]
+                if index == 0:
+                    self.flip_card(c1)
+                return True
+        return False
+
+    def to_foundation(self, column):
+        ''' Moves a card from the Tableau to the appropriate
+            Foundation pile
+        '''
+        column_cards = self.flipped[column]
+        if len(column_cards) == 0:
+            return False
+        if _foundation.add_card(column_cards[-1]):
+            column_cards.pop()
+            if len(column_cards) == 0:
+                self.flip_card(column)
+            return True
+        return False
+
+    def waste_to_tableau(self, waste_pile, column):
+        ''' Returns True if a card from the Waste pile is succesfully moved to a column
+            on the Tableau, returns False otherwise.
+        '''
+        card = waste_pile._waste[-1]
+        if self.add_cards([card], column):
+            waste_pile.pop_waste_card()
+            return True
+        return False
+
+class StockWaste():
+    ''' A StockWaste object keeps track of the Stock and Waste piles
+    '''
+    def __init__(self, cards):
+        self._deck = cards
+        self._waste = []
+
+    def stock_to_waste(self):
+        ''' Returns True if a card is sucessfully moved from the
+            Stock pile to the Waste pile
+            returns Ture, False otherwise.
+        '''
+        if len(self._deck) + len(self._waste) == 0:
+            plogit('There are no more cards in the Stock pile!')
+            return False
+        if len(self._deck) == 0:
+            self._waste.reverse()
+            self._deck = self._waste.copy()
+            self._waste.clear()
+        plogit(f'waste?: {" ,".join([str(c) for c in self._waste])}')
+        self._waste.append(self._deck.pop())
+        return True
+
+    def pop_waste_card(self):
+        ''' Removes a card from the Waste pile.
+        '''
+        if len(self._waste) > 0:
+            return self._waste.pop()
+        return None
+
+    def get_waste(self):
+        ''' Retrieves the top card of the Waste pile. '''
+        if len(self._waste) > 0:
+            return self._waste[-1]
+        plogit(f'waste empty: {self._waste}')
+        return 'empty'
+
+    def get_stock(self):
+        ''' Returns a string of the number of cards in the stock.
+        '''
+        if len(self._deck) > 0:
+            return str(len(self._deck)) + ' card(s)'
+        return 'empty'
+
+    def __str__(self) -> str:
+        dstr = ' ,'.join([str(c) for c in self._deck])
+        wstr = ' ,'.join([str(c) for c in self._waste])
+        return f'deck:{dstr}, waste:{wstr}'
+
+class Foundation():
+    ''' Data structure representing the four suits being placed in
+        Ace to King order during play.
+    '''
+    def __init__(self):
+        self._stacks = {s: [] for s in Card.Suits}
+
+    def add_card(self, card):
+        ''' Returns True if a card is successfully added to the Foundation,
+            otherwise, returns False.
+        '''
+        stack = self._stacks[card._suit]
+        if (len(stack) == 0 and card.value == 1) or stack[-1].below(card):
+            stack.append(card)
+            return True
+        return False
+
+    def get_top_card(self, suit):
+        ''' Return the top card of a _foundation pile. If the pile
+            is empty, return the letter of the suit.
+        '''
+        stack = self._stacks[suit]
+        if len(stack) == 0:
+            return suit[0].upper()
+        return self._stacks[suit][-1]
+
+    def gameWon(self) -> bool:
+        ''' Returns true if the user has won else false
+        '''
+        for suit, stack in self._stacks.items():
+            #if len(stack) == 0:
+            if not stack:
+                return False
+            card = stack[-1]
+            if card.value != 13:
+                return False
+        return True
+
+
+_deck = None
+_tableau = None
+_foundation = None
+_waste = None
+_show_hidden = False
+
+
+def new_deal(positons: []) -> bool:
+    global _deck, _tableau, _foundation, _waste
+    _deck = Deck()
+    _tableau = Tableau([_deck.deal_cards(x)
+                        for x in range(1, Tableau.Columns + 1)])
+    _foundation = Foundation()
+    _waste = StockWaste(_deck.deal_cards())
+    return True
+
+
+def next_card(positons: []) -> None:
+    ''' turn over the stock pile and put it on the waste/discard pile
+        positions should be empty
+    '''
+    if _waste.stock_to_waste():
+        print_table(args.show_hidden)
+    return None
+
+
+def waste_to_foundation(positions: []) => None:
+    ''' move the top card in the waste to its foundation pile
+        positions should be empty
+    '''
+    if _foundation.add_card(_waste.get_waste()):
+        _waste.pop_waste_card()
+        print_table(args.show_hidden)
+    else:
+        print('Card could be moved from the'
+                'Waste to the Foundation.')
+    return None
+
+def waste_to_tableau(positions: [int]) -> None:
+
+    ''' move card from the waste/discard pile to positions[0]
+    '''
+    col = positions[0]
+    if _tableau.waste_to_tableau(_waste, col):
+        print_table(_show_hidden)
+        return None
+    print(f'{card} could be moved Tableau column.')
+    return None
+
+
+def tableau_to_foundation(positions: [int]) -> None:
+    ''' move card at positions[0] to its foundation pile
+        postions[0] is the column of interest
+    '''
+    col = position[0]
+    if _tableau.to_foundation(col):
+        print_table(_show_hidden)
+        return None
+    print(f'card could be moved from {col=}')
+    return None
+
+
+def tableau_to_tableau(col1: int, col2: int) -> None:
+    if _tableau.tableau_to_tableau(col1, col2):
+        print_table(_show_hidden)
+        return None
+    print(f'card could be moved from that'
+                'Tableau column.')
+    return None
+
+
+def foundation_to_tableau(suit: int, col: int):
+    return None
+
+def undo_last():
+    print('Undo Not Available.')
+    return None
+
+def hint():
+    print('Hint Not Available.')
+    return None
+
+def sol_quit():
+    print('Game exited.')
+    sys.exit(0)
+
+def invalid_cmd():
+    print('Invalid command, h for help')
+
+
+_cmds = {
+    'N' : new_deal,
+    'n' : next_card,
+    'wt' : waste_to_tableau,
+    'tf' : tableau_to_foundation,
+    'tt' : tableau_to_tableau,
+    'ft' : foundation_to_tableau,
+    'u' : undo_last,
+    'u' : undo_last,
+}
+_cmd_table = {
+    SolActs.QUIT : sol_quit,
+    SolActs.HELP : show_cmds,
+    SolActs.NEW_DEAL : new_deal,
+    SolActs.STOCK_TO_WASTE : next_card,
+    SolActs.WASTE_TO_TABLEAU : waste_to_tableau,
+    SolActs.TABLEAU_TO_FOUNDATION : tableau_to_foundation
+    SolActs.TABLEAU_TO_TABLEAU : tableau_to_tableau
+    SolActs.UNDO : undo_last,
+    SolActs.HINT : hint,
+    SolActs.SOLVE : solve,
+}
+
+_help = '''Valid Commands:
+N - new deal
+n - move card from Stock to Waste
+wt #T - move card from Waste to Tableau
+tf #T - move card from Tableau to Foundation
+tt #T1 #T2 - move card from one Tableau column to another
+u - undo
+h - help
+H - hint
+s - solve
+q - quit'''
+
+def show_cmds():
+    ''' Provides the list of commands, for when users press h
+    '''
+    print(_help)
+
+def print_table(show_hidden: bool=False):
+    ''' Prints the current status of the table
+    '''
+    global _deck, _tableau, _foundation, _waste
+    # TODO(epr): use ANSI positioning to write in same place
+    print(BREAK_STRING)
+    print('Waste \t Stock \t\t\t\t Foundation')
+    print('{}\t{}\t\t{}\t{}\t{}\t{}'.format(_waste.get_waste(),
+            _waste.get_stock(), 
+            _foundation.get_top_card('club'),
+            _foundation.get_top_card('heart'), 
+            _foundation.get_top_card('spade'),
+            _foundation.get_top_card('diamond'))
+          )
+    print('\nTableau\n\t1\t2\t3\t4\t5\t6\t7\n')
+    # Print the cards, first printing the unflipped cards,
+    # and then the flipped.
+    for pile_depth in range(_tableau.pile_length()):
+        print_str = ''
+        for col in range(Tableau.Columns):
+            hidden_cards = _tableau.unflipped[col]
+            shown_cards = _tableau.flipped[col]
+            if len(hidden_cards) > pile_depth:
+                if show_hidden:
+                    logit(f'{pile_depth=}, {len(hidden_cards)=}')
+                    uf = ', '.join([str(c) for c in _tableau.unflipped[col]])
+                    logit(f'{col=}:{uf}')
+                    #print_str += '\tx'
+                    print_str += f'\t{UNDER}{str(_tableau.unflipped[col][pile_depth])}'
+                else:
+                    print_str += '\tx'
+            elif len(shown_cards) + len(hidden_cards) > pile_depth:
+                print_str += '\t' + str(shown_cards[pile_depth
+                                                    - len(hidden_cards)])
+            else:
+                print_str += '\t'
+        #logit(f'{print_str=}')
+        print(print_str)
+    print(BREAK_STRING)
+
+
+if __name__ == '__main__':
+    #print(Card.Symbols)
+    #sys.exit(1)
+    parser = argparse.ArgumentParser(description=\
+            'Play solitair')
+    parser.add_argument('--show_hidden', '-s',
+                        action='store_true',
+                        help='show the hidden cards')
+    parser.add_argument('--log_file', '-l',
+                        type=argparse.FileType('w'),
+                        default='S.log',
+                        help='define the log file: def: (default)s')
+    args = parser.parse_args()
+    set_log_file(args.log_file)
+    _show_hidden = args.show_hidden
+    new_deal()
+
+    print(BREAK_STRING)
+    print('Welcome to Danny\'s Solitaire!\n')
+    show_cmds()
+    print_table(args.show_hidden)
+
+    while not _foundation.gameWon():
+        command = input('Enter a command (type "h" for help): ')
+        logit(command)
+        cmdi, positions = psc.parse_sol_cmds(command)
+        """
+        if command[0] in 'hH':
+            show_cmds()
+            continue
+        if command[0] in 'qQ':
+            break
+        command = command.lower().replace(' ', '')
+        clen = len(command)
+        if clen >= 3:
+            def col2num(cc: str) -> int:
+                if col < '1' or colc > '7':
+                    print('column out of range 1 to 7')
+                    return -1
+                return int(colc) - 1
+            colc1 = col2num(command[2])
+            if colc1 == -1:
+                continue
+            if clen != 4:
+                print('invalid cmd')
+                continue
+            if col < '1' or colc > '7':
+                print('colume out of range 1 to 7')
+                continue
+            col = int(colc) - 1
+            logit(f'{col=}')
+        if command == 'n' :
+            if _waste.stock_to_waste():
+                print_table(args.show_hidden)
+        elif command == 'wf':
+            if _foundation.add_card(_waste.get_waste()):
+                _waste.pop_waste_card()
+                print_table(args.show_hidden)
+            else:
+                print('Error! No card could be moved from the'
+                        'Waste to the Foundation.')
+        elif 'wt' in command and len(command) == 3:
+            #col = int(command[-1]) - 1
+            if _tableau.waste_to_tableau(_waste, col):
+                print_table(args.show_hidden)
+            else:
+                print('Error! No card could be moved'
+                        'from the Waste to the Tableau column.')
+        elif 'tf' in command and len(command) == 3:
+            #col = int(command[-1]) - 1
+            if _tableau.to_foundation(col):
+                print_table(args.show_hidden)
+            else:
+                print('Error! No card could be moved from the'
+                        'Tableau column to the Foundation.')
+        elif 'tt' in command and len(command) == 4:
+            c1, c2 = int(command[-2]) - 1, int(command[-1]) - 1
+            if _tableau.tableau_to_tableau(c1, c2):
+                print_table(args.show_hidden)
+            else:
+                print('Error! No card could be moved from that'
+                        'Tableau column.')
+        else:
+            print('Sorry, that is not a valid command.')
+        """
+
+    if _foundation.gameWon():
+        print('Congratulations! You\'ve won!')
+    print('Game exited.')
+
