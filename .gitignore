@@ -1,3 +1,4 @@
 *-files
 *-tags
 *.log
+__pycache__/*

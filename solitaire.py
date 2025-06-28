@@ -15,21 +15,6 @@ import parse_sol_cmds as psc
 BREAK_STRING \
     = '\n-------------------------------------------------------------------'
 
-COLOR_RED='[31;1m'
-COLOR_GREEN='[32;1m'
-COLOR_YELLOW='[33;1m'
-COLOR_BLUE='[34;1m'
-COLOR_MAGENTA='[35;1m'
-COLOR_CYAN='[36;1m'
-
-COLOR_RED_BOLD='[31;1m'
-COLOR_GREEN_BOLD='[32;1m'
-COLOR_YELLOW_BOLD='[33;1m'
-COLOR_BLUE_BOLD='[34;1m'
-COLOR_MAGENTA_BOLD='[35;1m'
-COLOR_CYAN_BOLD='[36;1m'
-COLOR_NONE='[0m'
-
 UNDER='[4m'
 
 _lfd = None
@@ -47,57 +32,6 @@ def plogit(*args) -> None:
     print(*args, file=sys.stdout)
     return None
 
-class Card():
-    CardMap = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
-               8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
-
-    class Suits(enum.IntEnum):
-        SPADE = enum.auto() 
-        HEART = enum.auto() 
-        DIAMOND = enum.auto() 
-        CLUB = enum.auto() 
-
-    _suit_map = {
-        SPADE : 'spade',
-        HEART : 'heart',
-        DIAMOND : 'diamod',
-        CLUB : 'club',
-    }
-
-    #Suits = {'club', 'diamond', 'spade', 'heart'}
-    RedSuits = {Suits.DIAMOND, Suits.HEART}
-    BlackSuits = {Suits.SPADE, Suits.CLUB}
-    Symbols = {Suits.SPADE:'\u2660',
-               Suits.HEART:'\u2661',
-               Suits.DIAMOND:'\u2662',
-               Suits.CLUB:'\u2663'} 
-
-    def __init__(self, value: int, suit: Suits):
-        self._name = self.CardMap[value]
-        self._suit = suit
-        self._color = COLOR_RED if suit in Card.RedSuits else COLOR_BLUE
-        self.title \
-            = f'{self._color}{self._name}{Card.Symbols[self._suit]}{COLOR_NONE}'
-        self.value = value
-
-    def below(self, card):
-        return self.value == (card.value - 1)
-
-    def opposite_color(self, card):
-        #if self._suit == 'club' or self._suit == 'spade':
-        # TODO(epr): no reason to check twice
-        if self._suit in Card.BlackSuits:
-            return card._suit in Card.RedSuits
-        return card._suit in Card.BlackSuits
-
-    def attaches(self, card):
-        if card.below(self) and card.opposite_color(self):
-            return True
-        else:
-            return False
-
-    def __str__(self):
-        return self.title
 
 class Deck():
     unshuffled_deck = [Card(card, suit)

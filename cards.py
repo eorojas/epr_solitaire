@@ -23,7 +23,7 @@ UNDER='[4m'
 
 class Card():
     _range = {1, 14} # i.e, Ace to King, or 1 to 13
-    CardMap = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
+    _card_map = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
                8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
 
     class Suits(enum.IntEnum):
@@ -48,7 +48,7 @@ class Card():
                Suits.CLUB:'\u2663'} 
 
     def __init__(self, value: int, suit: Suits):
-        self._name = self.CardMap[value]
+        self._name = self._card_map[value]
         self._suit = suit
         self._color = COLOR_RED if suit in Card.RedSuits else COLOR_BLUE
         self.title \
@@ -95,7 +95,8 @@ if __name__ == '__main__':
         for i in range(1, numcards):
             s = random.randint(1, 4)
             acard = Card(i, s)
-            print(f'{Card.CardMap[i]}:{Card._suit_map[s]} => {acard},', end=' ')
+            print(f'{Card._card_map[i]}:{Card._suit_map[s]} => {acard},',
+                  end=' ')
             if (i & 15) == 0:
                 print()
         print()
