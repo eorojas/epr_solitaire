@@ -23,6 +23,10 @@ UNDER='[4m'
 
 class Card():
     _range = {1, 14} # i.e, Ace to King, or 1 to 13
+    _suit_range = {1, 4} # Spades, hearts, diamonds, clubs
+    def card_range():
+        return Card._range
+
     _card_map = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
                8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
 
@@ -73,6 +77,12 @@ class Card():
 
     def __str__(self):
         return self.title
+
+def cards_to_str(card_list: [Card]) -> str:
+    '''
+    debug method to create a string from a list of cards
+    '''
+    return ','.join([str(c) for c in card_list])
 
 
 if __name__ == '__main__':

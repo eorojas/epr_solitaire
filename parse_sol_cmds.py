@@ -23,6 +23,7 @@ class SolActs(enum.IntEnum):
     TABLEAU_TO_FOUNDATION = enum.auto()
     TABLEAU_TO_TABLEAU = enum.auto()
     UNDO = enum.auto()
+    REPLAY = enum.auto()
     HINT = enum.auto()
     SOLVE = enum.auto()
 

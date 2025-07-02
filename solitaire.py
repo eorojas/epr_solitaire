@@ -33,28 +33,6 @@ def plogit(*args) -> None:
     return None
 
 
-class Deck():
-    unshuffled_deck = [Card(card, suit)
-                        for card in range(1, 14)
-                            for suit in Card.Suits]
-
-    def __init__(self, seed=0):
-        # TODO set the seed to duplicate shuffle
-        self.deck = self.unshuffled_deck
-        random.shuffle(self.deck)
-
-    def Flip_card(self):
-        return self.deck.pop()
-
-    def deal_cards(self, num_cards: int = -1):
-        if num_cards == -1:
-            num_cards = len(self.deck)
-        return [self.deck.pop() for x in range(0, num_cards)]
-
-    def __str__(self) -> str:
-        cardsstr = ', '.join([str(c) for c in self.deck])
-        return f'{str(len(self.deck))}: {cardsstr}'
-        
 class Tableau():
     ''' Class that keeps track of the seven piles of cards on the Tableau
     '''
@@ -225,9 +203,10 @@ _show_hidden = False
 
 def new_deal(positons: []) -> bool:
     global _deck, _tableau, _foundation, _waste
-    _deck = Deck()
+    _deck = deck.Deck()
+    # deal out the cards for the tableau, cars arranged init
     _tableau = Tableau([_deck.deal_cards(x)
-                        for x in range(1, Tableau.Columns + 1)])
+                        for x in range(1, Tableau.cols() + 1)])
     _foundation = Foundation()
     _waste = StockWaste(_deck.deal_cards())
     return True
@@ -269,12 +248,13 @@ def waste_to_tableau(positions: [int]) -> None:
 def tableau_to_foundation(positions: [int]) -> None:
     ''' move card at positions[0] to its foundation pile
         postions[0] is the column of interest
+        cmd: tf
     '''
     col = position[0]
     if _tableau.to_foundation(col):
         print_table(_show_hidden)
         return None
-    print(f'card could be moved from {col=}')
+    #print(f'card could be moved from {col=}')
     return None
 
 
@@ -290,9 +270,15 @@ def tableau_to_tableau(col1: int, col2: int) -> None:
 def foundation_to_tableau(suit: int, col: int):
     return None
 
+
 def undo_last():
     print('Undo Not Available.')
     return None
+
+def replay():
+    print('Replay Not Available.')
+    return None
+
 
 def hint():
     print('Hint Not Available.')
@@ -315,6 +301,7 @@ _cmds = {
     'ft' : foundation_to_tableau,
     'u' : undo_last,
     'u' : undo_last,
+    'r' : replay,
 }
 _cmd_table = {
     SolActs.QUIT : sol_quit,
