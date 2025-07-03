@@ -26,3 +26,6 @@ I show the cards with color and symbols. e.g. A:heart => A♡, 2:diamod => 2♢,
 ## Run
 ./solitaire.py [--show_hidden]
     show_hidden shows all the cards.
+
+## Original sourcs
+https://github.com/daniel3wu/solitaire/tree/master

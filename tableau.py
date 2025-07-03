@@ -3,6 +3,7 @@
 #
 import argparse
 import functools as ft
+import pathlib as pl
 import random
 import re
 import sys
@@ -10,7 +11,9 @@ import typing as ty
 
 import cards as C
 import deck as D
+import foundation as F
 import parse_sol_cmds as psc
+#import stock_waste as W
 
 
 class Tableau():
@@ -24,7 +27,10 @@ class Tableau():
     def cols() -> int:
         return Tableau._cols
 
-    def __init__(self, cards_lists: ty.List[[ty.List[C.Card]]]):
+    def __init__(self,
+                 cards_lists: ty.List[[ty.List[C.Card]]],
+                 foundation: F.Foundation):
+                 #waste: W.StockWaste):
         '''
         Args:
             cards_list is a lists, one for each column with counts
@@ -36,6 +42,8 @@ class Tableau():
         unflipped the hidden cards.
         The dictionaries are indexed by column numbers 0 to 6
         '''
+        self._F = foundation
+        #self._W = waste
         self.unflipped = {x: cards_lists[x] for x in range(Tableau._cols)}
         self.flipped = {x: [self.unflipped[x].pop()]
                         for x in range(Tableau._cols)}
@@ -98,7 +106,8 @@ class Tableau():
         column_cards = self.flipped[column]
         if len(column_cards) == 0:
             return False
-        if _foundation.add_card(column_cards[-1]):
+        # was _foundation
+        if self._F.add_card(column_cards[-1]):
             column_cards.pop()
             if len(column_cards) == 0:
                 self.flip_card(column)
@@ -106,8 +115,8 @@ class Tableau():
         return False
 
     def waste_to_tableau(self, waste_pile, column):
-        ''' Returns True if a card from the Waste pile is succesfully moved to a column
-            on the Tableau, returns False otherwise.
+        ''' Returns True if a card from the Waste pile is succesfully
+            moved to a column on the Tableau, returns False otherwise.
         '''
         card = waste_pile._waste[-1]
         if self.add_cards([card], column):
@@ -128,10 +137,10 @@ def print_tableau(t: Tableau):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test tableau')
-    parser.add_argument('--seed', '-s',
-                        type=int,
-                        default=0,
-                        help='set seed %(default)s')
+    parser.add_argument('--deck', '-d',
+                        type=pl.Path,
+                        default=None,
+                        help='path of deck lay')
     args = parser.parse_args()
     deck = D.Deck()
     # generate a list of lists [1-card, 2-cards, ..., 7-cards]

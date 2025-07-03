@@ -33,167 +33,6 @@ def plogit(*args) -> None:
     return None
 
 
-class Tableau():
-    ''' Class that keeps track of the seven piles of cards on the Tableau
-    '''
-    Columns = 7
-
-    def __init__(self, card_list):
-        self.unflipped = {x: card_list[x] for x in range(Tableau.Columns)}
-        self.flipped = {x: [self.unflipped[x].pop()]
-                        for x in range(Tableau.Columns)}
-
-    def flip_card(self, col):
-        ''' Flips a card under column col on the Tableau '''
-        if len(self.unflipped[col]) > 0:
-            self.flipped[col].append(self.unflipped[col].pop())
-
-    def pile_length(self):
-        ''' Returns the length of the longest pile on the Tableau
-        '''
-        return max([len(self.flipped[x]) + len(self.unflipped[x])
-                        for x in range(Tableau.Columns)])
-
-    def add_cards(self, cards, column):
-        ''' Returns true if cards were successfully
-                added to column on the Tableau.
-            else false
-        '''
-        column_cards = self.flipped[column]
-        if len(column_cards) == 0 and cards[0].value == 13:
-            column_cards.extend(cards)
-            return True
-        elif len(column_cards) > 0 and column_cards[-1].attaches(cards[0]):
-            column_cards.extend(cards)
-            return True
-        return False
-
-    def tableau_to_tableau(self, c1, c2):
-        ''' Returns True if any card(s) are successfully moved from
-            c1 to c2 on the Tableau, returns False otherwise.
-        '''
-        c1_cards = self.flipped[c1]
-
-        for index in range(len(c1_cards)):
-            if self.add_cards(c1_cards[index:], c2):
-                self.flipped[c1] = c1_cards[0:index]
-                if index == 0:
-                    self.flip_card(c1)
-                return True
-        return False
-
-    def to_foundation(self, column):
-        ''' Moves a card from the Tableau to the appropriate
-            Foundation pile
-        '''
-        column_cards = self.flipped[column]
-        if len(column_cards) == 0:
-            return False
-        if _foundation.add_card(column_cards[-1]):
-            column_cards.pop()
-            if len(column_cards) == 0:
-                self.flip_card(column)
-            return True
-        return False
-
-    def waste_to_tableau(self, waste_pile, column):
-        ''' Returns True if a card from the Waste pile is succesfully moved to a column
-            on the Tableau, returns False otherwise.
-        '''
-        card = waste_pile._waste[-1]
-        if self.add_cards([card], column):
-            waste_pile.pop_waste_card()
-            return True
-        return False
-
-class StockWaste():
-    ''' A StockWaste object keeps track of the Stock and Waste piles
-    '''
-    def __init__(self, cards):
-        self._deck = cards
-        self._waste = []
-
-    def stock_to_waste(self):
-        ''' Returns True if a card is sucessfully moved from the
-            Stock pile to the Waste pile
-            returns Ture, False otherwise.
-        '''
-        if len(self._deck) + len(self._waste) == 0:
-            plogit('There are no more cards in the Stock pile!')
-            return False
-        if len(self._deck) == 0:
-            self._waste.reverse()
-            self._deck = self._waste.copy()
-            self._waste.clear()
-        plogit(f'waste?: {" ,".join([str(c) for c in self._waste])}')
-        self._waste.append(self._deck.pop())
-        return True
-
-    def pop_waste_card(self):
-        ''' Removes a card from the Waste pile.
-        '''
-        if len(self._waste) > 0:
-            return self._waste.pop()
-        return None
-
-    def get_waste(self):
-        ''' Retrieves the top card of the Waste pile. '''
-        if len(self._waste) > 0:
-            return self._waste[-1]
-        plogit(f'waste empty: {self._waste}')
-        return 'empty'
-
-    def get_stock(self):
-        ''' Returns a string of the number of cards in the stock.
-        '''
-        if len(self._deck) > 0:
-            return str(len(self._deck)) + ' card(s)'
-        return 'empty'
-
-    def __str__(self) -> str:
-        dstr = ' ,'.join([str(c) for c in self._deck])
-        wstr = ' ,'.join([str(c) for c in self._waste])
-        return f'deck:{dstr}, waste:{wstr}'
-
-class Foundation():
-    ''' Data structure representing the four suits being placed in
-        Ace to King order during play.
-    '''
-    def __init__(self):
-        self._stacks = {s: [] for s in Card.Suits}
-
-    def add_card(self, card):
-        ''' Returns True if a card is successfully added to the Foundation,
-            otherwise, returns False.
-        '''
-        stack = self._stacks[card._suit]
-        if (len(stack) == 0 and card.value == 1) or stack[-1].below(card):
-            stack.append(card)
-            return True
-        return False
-
-    def get_top_card(self, suit):
-        ''' Return the top card of a _foundation pile. If the pile
-            is empty, return the letter of the suit.
-        '''
-        stack = self._stacks[suit]
-        if len(stack) == 0:
-            return suit[0].upper()
-        return self._stacks[suit][-1]
-
-    def gameWon(self) -> bool:
-        ''' Returns true if the user has won else false
-        '''
-        for suit, stack in self._stacks.items():
-            #if len(stack) == 0:
-            if not stack:
-                return False
-            card = stack[-1]
-            if card.value != 13:
-                return False
-        return True
-
-
 _deck = None
 _tableau = None
 _foundation = None
@@ -236,6 +75,10 @@ def waste_to_foundation(positions: []) => None:
 def waste_to_tableau(positions: [int]) -> None:
 
     ''' move card from the waste/discard pile to positions[0]
+        cmd: wt
+        Args:
+              
+              positions: 
     '''
     col = positions[0]
     if _tableau.waste_to_tableau(_waste, col):
@@ -342,10 +185,10 @@ def print_table(show_hidden: bool=False):
     print('Waste \t Stock \t\t\t\t Foundation')
     print('{}\t{}\t\t{}\t{}\t{}\t{}'.format(_waste.get_waste(),
             _waste.get_stock(), 
-            _foundation.get_top_card('club'),
-            _foundation.get_top_card('heart'), 
-            _foundation.get_top_card('spade'),
-            _foundation.get_top_card('diamond'))
+            _foundation.get_top_card(C.Suits.SPADE),
+            _foundation.get_top_card(C.Suits.HEART), 
+            _foundation.get_top_card(C.Suits.DIAMOD),
+            _foundation.get_top_card(C.Suits.CLUB))
           )
     print('\nTableau\n\t1\t2\t3\t4\t5\t6\t7\n')
     # Print the cards, first printing the unflipped cards,

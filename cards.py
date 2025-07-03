@@ -31,10 +31,10 @@ class Card():
                8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
 
     class Suits(enum.IntEnum):
-        SPADE = enum.auto() 
-        HEART = enum.auto() 
-        DIAMOND = enum.auto() 
-        CLUB = enum.auto() 
+        SPADE = enum.auto()
+        HEART = enum.auto()
+        DIAMOND = enum.auto()
+        CLUB = enum.auto()
 
     _suit_map = {
         Suits.SPADE : 'spade',
@@ -49,15 +49,20 @@ class Card():
     Symbols = {Suits.SPADE:'\u2660',
                Suits.HEART:'\u2661',
                Suits.DIAMOND:'\u2662',
-               Suits.CLUB:'\u2663'} 
+               Suits.CLUB:'\u2663'}
+
+    def symbol(s : Suits) -> str:
+        color = COLOR_RED if s in Card.RedSuits else COLOR_BLUE
+        return f'{color}{Symbols[s]}{COLOR_NONE}'
 
     def __init__(self, value: int, suit: Suits):
         self._name = self._card_map[value]
         self._suit = suit
         self._color = COLOR_RED if suit in Card.RedSuits else COLOR_BLUE
-        self.title \
+        self._title \
             = f'{self._color}{self._name}{Card.Symbols[self._suit]}{COLOR_NONE}'
         self.value = value
+
 
     def below(self, card):
         return self.value == (card.value - 1)
@@ -76,7 +81,7 @@ class Card():
             return False
 
     def __str__(self):
-        return self.title
+        return self._title
 
 def cards_to_str(card_list: [Card]) -> str:
     '''
@@ -110,3 +115,4 @@ if __name__ == '__main__':
             if (i & 15) == 0:
                 print()
         print()
+
