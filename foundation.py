@@ -50,7 +50,7 @@ class Foundation():
             stack.append(card)
         return False
                                                                                 
-    def top_card_str(self, suit: C.Card) -> str:
+    def top_card_str(self, suit: C.Suits) -> str:
         ''' get the string for current top card by suit from its stack
         Returns:
             the top card title of a foundation pile. If the pile               
@@ -58,7 +58,7 @@ class Foundation():
         '''
         stack = self._stacks[suit]                                    
         if not stack:
-            return C.symbol(suit)
+            return C.Card.symbol(suit)
         return str(self._stacks[suit][-1])
                                                                                 
     def game_won(self) -> bool:                                                          
@@ -66,15 +66,10 @@ class Foundation():
         Returns:
             True iff the game is won, i.e., when all stacks being full!
         '''
-        #for vals in self._stacks.values():
-        #    print(f'vals:{vals[-1].value}')
-        #    #print(f'sym:{C.Card.symbol(s)}: {len(s.values())}')
         if any(not s for s in self._stacks.values()):
-            print(f'not any failed')
             return False
         # return true iff all stacks have a king as the top card.
         b_all = all(s[-1].value == C.Card.king() for s in self._stacks.values())
-        #print(f'{b_all=}')
         return b_all
 
 def print_foundation(f: Foundation) -> None:
@@ -85,11 +80,25 @@ def print_foundation(f: Foundation) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test foundation operations')
+    parser.add_argument('--interval', '-i',
+                        type=int,
+                        default=7,
+                        help='check interval default: %(default)s')
     args = parser.parse_args()
     f = Foundation()
+    i = args.interval
+    print(f'Start Not Won?: {f.game_won()}')
     for s in C.Suits:
+        print(f'{f.top_card_str(s)}: ', end='')
         for c in range(*C.card_range()):
+            i = i - 1
             f.add_card(C.Card(c, s))
+            if i <= 0:
+                print_foundation(f)
+                print(f'Mid {i=} Won?: {f.game_won()}')
+                i = args.interval
+        print_foundation(f)
+        print(f'End suits {s} Won?: {f.game_won()}')
     print_foundation(f)
     print(f'Game Won?: {f.game_won()}')
 
