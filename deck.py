@@ -13,8 +13,8 @@ import cards as C
 
 class Deck():
     _unshuffled_deck = [C.Card(card, suit)
-                          for card in range(*C.Card.card_range())
-                            for suit in C.Card.Suits ]
+                          for card in range(*C.card_range())
+                            for suit in C.Suits ]
 
     def random_shuffle() -> ty.Iterable[C.Card]:
         d = list(Deck._unshuffled_deck)

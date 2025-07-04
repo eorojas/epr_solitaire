@@ -144,6 +144,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     deck = D.Deck()
     # generate a list of lists [1-card, 2-cards, ..., 7-cards]
-    t = Tableau([deck.deal_cards(x) for x in range(1, Tableau.cols() + 1)])
+    f = F.Foundation()
+    t = Tableau([deck.deal_cards(x) for x in range(1, Tableau.cols() + 1)], F)
     print_tableau(t)
 

@@ -62,6 +62,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     f = Foundation()
     for s in C.Suits:
-        for c in range(Cards.range()):
+        for c in range(*C.card_range()):
             f.add_card(C.Card(c, s))
     print(f'Game Won?: {f.game_won()}')

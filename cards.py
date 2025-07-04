@@ -20,21 +20,21 @@ COLOR_NONE='[0m'
 
 UNDER='[4m'
 
+class Suits(enum.IntEnum):
+    SPADE = enum.auto()
+    HEART = enum.auto()
+    DIAMOND = enum.auto()
+    CLUB = enum.auto()
+
+_range = {1, 14} # i.e, Ace to King, or 1 to 13
+_suit_range = {1, 4} # Spades, hearts, diamonds, clubs
+def card_range():
+    return _range
 
 class Card():
-    _range = {1, 14} # i.e, Ace to King, or 1 to 13
-    _suit_range = {1, 4} # Spades, hearts, diamonds, clubs
-    def card_range():
-        return Card._range
 
     _card_map = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
                8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
-
-    class Suits(enum.IntEnum):
-        SPADE = enum.auto()
-        HEART = enum.auto()
-        DIAMOND = enum.auto()
-        CLUB = enum.auto()
 
     _suit_map = {
         Suits.SPADE : 'spade',
@@ -97,8 +97,8 @@ if __name__ == '__main__':
                         help='random random')
     args = parser.parse_args()
 
-    for s in Card.Suits:
-        for c in range(*Card._range):
+    for s in Suits:
+        for c in range(*_range):
             acard = Card(c, s)
             #print(f'{c}:{s} -> {acard},', end=' ')
             print(f'{acard},', end=' ')
