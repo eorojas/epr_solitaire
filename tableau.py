@@ -65,8 +65,8 @@ class Tableau():
                         for x in range(_cols)])
 
     def add_cards(self,
-                  clist: ty.List(C.Cards],
-                  column: ty.List[C.Cards) -> bool:
+                  clist: ty.List[C.Card],
+                  column: ty.List[C.Card]) -> bool:
         ''' adds card to the column iff it follows solitaire rules.
             If the column is empty only a King(13) can be added.
             otherwise the card must have the opposite color and
