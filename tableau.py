@@ -85,11 +85,6 @@ class Tableau():
             return True
         if not column_cards:
             return False
-        #if len(column_cards) == 0 and clist[0].value == 13:
-        #    column_cards.extend(clist)
-        #    return True
-        # if there are cards and the solitaire attach rule is followed
-        # extend this list to the column
         attach_to_c = clist[0]
         attach_card = column_cards[-1]
         # colors must not be the same to add on tableau
@@ -123,7 +118,6 @@ class Tableau():
         column_cards = self._flipped[column]
         if len(column_cards) == 0:
             return False
-        # was _foundation
         if self._F.add_card(column_cards[-1]):
             column_cards.pop()
             if len(column_cards) == 0:
@@ -158,7 +152,12 @@ if __name__ == '__main__':
                         type=pl.Path,
                         default=None,
                         help='path of deck lay')
+    parser.add_argument('--seed', '-s',
+                        type=int,
+                        help='set seed')
     args = parser.parse_args()
+    if args.seed != None:
+        random.seed(args.seed)
     deck = D.Deck()
     # generate a list of lists [1-card, 2-cards, ..., 7-cards]
     f = F.Foundation()

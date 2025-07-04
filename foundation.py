@@ -80,11 +80,17 @@ def print_foundation(f: Foundation) -> None:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test foundation operations')
+    parser.add_argument('--seed', '-s',
+                        type=int,
+                        help='set seed')
     parser.add_argument('--interval', '-i',
                         type=int,
                         default=7,
                         help='check interval default: %(default)s')
     args = parser.parse_args()
+    if args.seed != None:
+        random.seed(args.seed)
+    deck = Deck()
     f = Foundation()
     i = args.interval
     print(f'Start Not Won?: {f.game_won()}')
