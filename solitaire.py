@@ -181,14 +181,15 @@ def print_table(show_hidden: bool=False):
     '''
     global _deck, _tableau, _foundation, _waste
     # TODO(epr): use ANSI positioning to write in same place
+    #   last step in refactoring
     print(BREAK_STRING)
     print('Waste \t Stock \t\t\t\t Foundation')
     print('{}\t{}\t\t{}\t{}\t{}\t{}'.format(_waste.get_waste(),
             _waste.get_stock(), 
-            _foundation.get_top_card(C.Suits.SPADE),
-            _foundation.get_top_card(C.Suits.HEART), 
-            _foundation.get_top_card(C.Suits.DIAMOD),
-            _foundation.get_top_card(C.Suits.CLUB))
+            _foundation.top_card_str(C.Suits.SPADE),
+            _foundation.top_card_str(C.Suits.HEART), 
+            _foundation.top_card_str(C.Suits.DIAMOD),
+            _foundation.top_card_str(C.Suits.CLUB))
           )
     print('\nTableau\n\t1\t2\t3\t4\t5\t6\t7\n')
     # Print the cards, first printing the unflipped cards,
