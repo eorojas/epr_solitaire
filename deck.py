@@ -46,10 +46,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test deck')
     parser.add_argument('--seed', '-s',
                         type=int,
-                        default=0,
-                        help='set seed %(default)s')
+                        help='set seed')
     args = parser.parse_args()
 
+    if args.seed != None:
+        random.seed(args.seed)
     deck = Deck()
 
     print(f'deck({args.seed}: {deck}')
