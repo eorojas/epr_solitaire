@@ -47,6 +47,14 @@ class Tableau():
         self._flipped = {x: [self._unflipped[x].pop()]
                         for x in range(_cols)}
 
+    @property
+    def unflipped(self):
+        return self._unflipped
+
+    @property
+    def flipped(self):
+        return self._flipped
+
     def flip_card(self, col: int):
         ''' Flips a card under column col on the Tableau
             Iff the len(unflipped) > 0
@@ -98,11 +106,20 @@ class Tableau():
         return True
 
     def tableau_to_tableau(self, c1, c2):
-        ''' Returns True if any card(s) are successfully moved from
-            c1 to c2 on the Tableau, returns False otherwise.
+        ''' Moves some part of the flipped cards in column c1
+            to the bottom for column c2
+        Args:
+            c1: the source column #
+            c2: the dest column #
+        Returns:
+            True if any card(s) are moved from
+            c1 to c2, Otherwie False
         '''
         c1_cards = self._flipped[c1]
 
+        # walk down the source pile until we find a plce to append to
+        # col c2.
+        # TODO(epr): this looks a little inificient
         for index in range(len(c1_cards)):
             if self.add_cards(c1_cards[index:], c2):
                 self._flipped[c1] = c1_cards[0:index]
@@ -111,29 +128,39 @@ class Tableau():
                 return True
         return False
 
-    def to_foundation(self, column):
-        ''' Moves a card from the Tableau to the appropriate
+    def to_foundation(self, col: int) -> bool:
+        ''' Moves a card from the bottom of the column to the appropriate
             Foundation pile
+        Args:
+            col: index of column
         '''
-        column_cards = self._flipped[column]
-        if len(column_cards) == 0:
+        column = self._flipped[col]
+        if not column:
             return False
-        if self._F.add_card(column_cards[-1]):
-            column_cards.pop()
-            if len(column_cards) == 0:
-                self.flip_card(column)
+        if self._F.add_card(column[-1]):
+            column.pop()
+            if not column:
+                self.flip_card(col)
             return True
         return False
 
-    def waste_to_tableau(self, waste_pile, column):
-        ''' Returns True if a card from the Waste pile is succesfully
+    def waste_to_tableau(self, waste_pile, col):
+        ''' Moves the card at the "top" of the waste to col
+            TODO(epr): passing the waste_pile here ranter than having
+                it be a member is inconsistent, but it avoid a circular
+                reference
+        Args:
+            waste_pile: is the waste pile.
+            col: is target col
+        Returns True if a card from the Waste pile is succesfully
             moved to a column on the Tableau, returns False otherwise.
         '''
         card = waste_pile._waste[-1]
-        if self.add_cards([card], column):
+        if self.add_cards([card], col):
             waste_pile.pop_waste_card()
             return True
         return False
+
 
 def print_tableau(t: Tableau):
     '''

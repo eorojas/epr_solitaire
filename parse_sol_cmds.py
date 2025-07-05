@@ -26,6 +26,7 @@ class SolActs(enum.IntEnum):
     REPLAY = enum.auto()
     HINT = enum.auto()
     SOLVE = enum.auto()
+    INVALID = enum.auto()
 
 _cmd_history = []
 
@@ -36,7 +37,6 @@ def parse_cmd(cin:str) -> (str, [int]):
     if not cin:
         return None, None
     parts = cin.strip().split()
-    #print(f'PC:{cin=}, {parts=}')
     if not parts:
         return None, parts
     positions = []
@@ -58,8 +58,8 @@ def get_cmd() -> (str, int):
 
 
 def parse_sol_cmds(input_cmd: ty.Callable[[None], str]=get_cmd) -> [str, int]:
-    ''' gemini then modified
-    Parses a Solitaire command string using regular expressions and match/case.
+    ''' Parses a Solitaire command string using regular expressions
+        and match/case.
     Args:
         command_string (str): The command string entered by the user.
     Returns:
@@ -73,9 +73,7 @@ def parse_sol_cmds(input_cmd: ty.Callable[[None], str]=get_cmd) -> [str, int]:
     # Normalize the command string by stripping whitespace and splitting
     # into parts
     # This prepares it for pattern matching
-    print(f'PSC:{input_cmd=}', flush=True)
     cmd, positions = input_cmd()
-    print(f'PSC:{cmd=}, {positions=}', flush=True)
 
     # Use match/case for pattern matching
     match cmd:
@@ -129,9 +127,7 @@ if __name__ == '__main__':
         ''' read the _cmds list and pass to caller one at a time
         '''
         for cmdin in _cmds:
-            #print(f'GTC:{cmdin=}')
             cmd, positions = parse_cmd(cmdin)
-            #print(f'GTC:{cmd=}, {positions=}')
             yield (cmd, positions)
         _finished = True
         return None, None
