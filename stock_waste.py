@@ -36,15 +36,17 @@ class StockWaste():
                 the Stock pile to the Waste pile
         Note(epr): the list is being used as a stack.
         '''
+        print(f'SW: stw')
         if not self._stock and not self._waste:
             return False
-        self._waste.reverse()
-        self._stock = self._waste.copy()
-        self._waste.clear()
+        if not self._stock:
+            self._waste.reverse()
+            self._stock = self._waste.copy()
+            self._waste.clear()
         self._waste.append(self._stock.pop())
         return True
 
-    def pop_waste_card(self) -> C.Card:
+    def pop_waste_card(self) -> C.Card | None:
         ''' Removes a card from the Waste pile.
         '''
         if self._waste:
@@ -55,26 +57,38 @@ class StockWaste():
         ''' Retrieves the top card of the Waste pile, leaving it in place.
             Note _waste is treated like a stack
         '''
+        print(f'SW.gw: {C.cards_to_str(self._waste)}')
         if self._waste:
             return self._waste[-1]
-        return 'empty'
+        return None
 
     def get_stock(self):
         ''' Returns a string of the number of cards in the stock.
         '''
+        print(f'SW.gs: {C.cards_to_str(self._stock)}')
         if len(self._stock) > 0:
             return str(len(self._stock)) + ' card(s)'
-        return 'empty'
+        return None
 
     def __str__(self) -> str:
         stock_str =  f'S: {C.cards_to_str(self._stock)}'
         waste_str =  f'W: {C.cards_to_str(self._waste)}'
         return f'{stock_str}::{waste_str}'
 
-
+def print_sw(sw):
+    print(f'\n{sw}')
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Test stock/waste operations')
+    parser = \
+        argparse.ArgumentParser(description='Test stock/waste operations')
     args = parser.parse_args()
+    d = D.Deck()
+    card_cnt = 17
+    sw = StockWaste(d.deal_cards(card_cnt))
+    print(f'{sw.get_stock()}')
+    print(f'{sw.get_waste()}')
+    for i in range(card_cnt):
+        sw.stock_to_waste()
+        print(f'{sw}')
 

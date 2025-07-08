@@ -38,6 +38,7 @@ class Foundation():
             otherwise the "top" of stack must be one less than
             the new card and the opposite color
         '''                                       
+        print(f'f.ad: {card}')
         stack = self._stacks[card.suit] # get suit stack
         if not stack:
             # if the foundation stack is empty we can only add an Ace
@@ -46,6 +47,7 @@ class Foundation():
                 return True
         # stack not empty, so the rule is that the bottom if the stack is
         # one less then new card
+        print(f'f.ac{C.cards_to_str(stack)}')
         if (card.value - stack[-1].value) == 1:
             stack.append(card)
         return False
@@ -56,6 +58,7 @@ class Foundation():
             the top card title of a foundation pile. If the pile               
             is empty, return the symbol for the suit.
         '''
+        #print(f'f.tcs: {suit}')
         stack = self._stacks[suit]                                    
         if not stack:
             return C.Card.symbol(suit)
@@ -66,6 +69,7 @@ class Foundation():
         Returns:
             True iff the game is won, i.e., when all stacks being full!
         '''
+        print(f'check game won')
         if any(not s for s in self._stacks.values()):
             return False
         # return true iff all stacks have a king as the top card.
@@ -75,7 +79,7 @@ class Foundation():
 def print_foundation(f: Foundation) -> None:
     for s in C.Suits:
         stack = f.stack(s)
-        print(f'{C.Card.symbol(s)}: {C.cards_to_str(stack)}')
+        print(f'F:{C.Card.symbol(s)}: {C.cards_to_str(stack)}')
 
 
 if __name__ == '__main__':
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.seed != None:
         random.seed(args.seed)
-    deck = Deck()
+    deck = D.Deck()
     f = Foundation()
     i = args.interval
     print(f'Start Not Won?: {f.game_won()}')

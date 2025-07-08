@@ -54,43 +54,53 @@ def new_deal(cmd_args: ty.List[C.Card]) -> bool:
     return True
 
 
-def stock_to_waste(cmd_args: ty.List[C.Card]) -> None:
+def stock_to_waste(cmd_args: ty.List[int]) -> None:
     ''' turn over the stock pile and put it on the waste/discard pile
         cmd_args should be empty
+        cmd is "m"
     '''
+    print(f'S.stw: {cmd_args}')
     _waste.stock_to_waste()
     return None
 
 
-def waste_to_foundation(cmd_args: ty.List[C.Card]) -> None:
+def waste_to_foundation(cmd_args: ty.List[int]) -> None:
     ''' Move the top card in the waste to its foundation pile
     Args:
         cmd_args: should be empty
+    cmd is "w"
     '''
+    print(f'S.wtf: {cmd_args}')
+    c = _waste.get_waste()
+    print(f'wtf: {c}')
     if _foundation.add_card(_waste.get_waste()):
-        # TODO(epr): was accesss waste twice
+        # TODO(epr): accessses waste twice
         _waste.pop_waste_card()
     return None
 
-def waste_to_tableau(cmd_args: ty.List[C.Card]) -> None:
-
+def waste_to_tableau(cmd_args: ty.List[int]) -> None:
     ''' Move card from the waste/discard pile col in tableaeu
     Args:
         cmd_args: col to move to
+    cmd is "w C"
     '''
     col = cmd_args[0]
+    print(f'S.wtt: {col=} -> ')
     if _tableau.waste_to_tableau(_waste, col):
         return None
     return None
 
 
-def tableau_to_foundation(cmd_args: [int]) -> None:
+def tableau_to_foundation(cmd_args: ty.List[int]) -> None:
     ''' Move card at cmd_args[0] to its foundation pile
     Args:
-        cmd_args: [0] contains pile number
+        cmd_args: [x] contains pile number
+    cmd is "t C'
     '''
-    pile = cmd_args[0]
-    if _tableau.to_foundation(pile):
+    col = cmd_args[0]
+    print(f'S.TTF: {cmd_args=}')
+
+    if _tableau.to_foundation(col):
         return None
     return None
 
@@ -98,8 +108,10 @@ def tableau_to_foundation(cmd_args: [int]) -> None:
 def tableau_to_tableau(cmd_args: ty.List[int]) -> None:
     ''' Move column from one col to another. The from column can
         be partial.
+    cmd is t C C
     '''
-    if _tableau.tableau_to_tableau(col1, col2):
+    print(f'ttt: {cmd_args}')
+    if _tableau.tableau_to_tableau(cmd_args[0], cmd_args[1]):
         return None
     return None
 
@@ -119,6 +131,7 @@ def replay(cmd_args: ty.List[int]) -> None:
 
 def hint(cmd_args: ty.List[int]) -> None:
     print('Hint Not Available.')
+    #input('no hint')
     return None
 
 
@@ -128,14 +141,16 @@ def solve(cmd_args: ty.List[int]) -> None:
 
 
 def sol_quit(cmd_args: ty.List[int]) -> None:
-    print('Game exited.')
+    print('Exited solitaire.')
     sys.exit(0)
 
 def invalid_cmd(cmd_args: ty.List[int]) -> None:
-    print('Invalid command, h for help')
+    print('Invalid command, ? or <enter> for help')
+    show_cmds([])
 
 
-_help = '''Valid Commands:
+_help = None
+'''Valid Commands:
 N - new deal
 n - move card from Stock to Waste
 wt #T - move card from Waste to Tableau
@@ -145,27 +160,32 @@ u - undo
 h - help
 H - hint
 s - solve
+? - helop
 q - quit'''
 
 def show_cmds(cmd_args: ty.List[int]) -> None:
     ''' Provides the list of commands, for when users press h
     '''
+    global _help
+    if not _help:
+        _help = psc.create_sol_help()
     print(_help)
 
 
 
 _cmd_table = {
-    psc.SolActs.QUIT : sol_quit,
-    psc.SolActs.HELP : show_cmds,
     psc.SolActs.NEW_DEAL : new_deal,
+    psc.SolActs.WASTE_FOUNDATION: waste_to_foundation,
     psc.SolActs.STOCK_TO_WASTE : stock_to_waste,
     psc.SolActs.WASTE_TO_TABLEAU : waste_to_tableau,
     psc.SolActs.TABLEAU_TO_FOUNDATION : tableau_to_foundation,
     psc.SolActs.TABLEAU_TO_TABLEAU : tableau_to_tableau,
     psc.SolActs.UNDO : undo_last,
+    psc.SolActs.QUIT : sol_quit,
     psc.SolActs.REPLAY : replay,
     psc.SolActs.HINT : hint,
     psc.SolActs.SOLVE : solve,
+    psc.SolActs.HELP : show_cmds,
     psc.SolActs.INVALID : invalid_cmd,
 }
 
@@ -198,7 +218,6 @@ def print_table(show_hidden: bool=False):
                     logit(f'{pile_depth=}, {len(hidden_cards)=}')
                     uf = ', '.join([str(c) for c in _tableau.unflipped[col]])
                     logit(f'{col=}:{uf}')
-                    #print_str += '\tx'
                     print_str += f'\t{UNDER}{str(_tableau.unflipped[col][pile_depth])}'
                 else:
                     print_str += '\tx'
@@ -230,16 +249,20 @@ if __name__ == '__main__':
     new_deal([])
 
     print(BREAK_STRING)
-    print('Welcome to Danny\'s Solitaire!\n')
+    print('SOLITAIRE!\n')
     show_cmds([])
     print_table(args.show_hidden)
 
-    while not _foundation.game_won():
-        command = input('Enter a command (type "h" for help): ')
-        logit(command)
-        cmdi, cmd_args = psc.parse_sol_cmds(command)
-        print_table(args.show_hidden)
+    while True:
+        while not _foundation.game_won():
+            cmdi, cmd_args = psc.parse_sol_cmds()
+            print(f'Sparse_sol_cmds.py*LOOP: {cmdi}, {cmd_args}')
+            _cmd_table[cmdi](cmd_args)
+            print_table(args.show_hidden)
 
-    print('Congratulations! You\'ve won!')
-    print('Game exited.')
+        print('Congratulations! You\'ve won!')
+        y = input('Another?')
+        if y[0] == 'y':
+            break
+    print('Bye!')
 
