@@ -38,18 +38,22 @@ class Foundation():
             otherwise the "top" of stack must be one less than
             the new card and the opposite color
         '''                                       
-        print(f'f.ad: {card}')
+        print(f'f.ad-new: {card}')
         stack = self._stacks[card.suit] # get suit stack
         if not stack:
             # if the foundation stack is empty we can only add an Ace
             if card.value == C.Card.ace():
                 stack.append(card)
                 return True
+            else:
+                return False
         # stack not empty, so the rule is that the bottom if the stack is
         # one less then new card
-        print(f'f.ac{C.cards_to_str(stack)}')
+        print(f'f.ac-old{C.cards_to_str(stack)} ?= {card}')
         if (card.value - stack[-1].value) == 1:
             stack.append(card)
+            print(f'f.ac-new-stack{C.cards_to_str(stack)}')
+            return True
         return False
                                                                                 
     def top_card_str(self, suit: C.Suits) -> str:
@@ -69,7 +73,7 @@ class Foundation():
         Returns:
             True iff the game is won, i.e., when all stacks being full!
         '''
-        print(f'check game won')
+        #print(f'check game won')
         if any(not s for s in self._stacks.values()):
             return False
         # return true iff all stacks have a king as the top card.
@@ -91,12 +95,30 @@ if __name__ == '__main__':
                         type=int,
                         default=7,
                         help='check interval default: %(default)s')
+    parser.add_argument('--minitest', '-m',
+                        action='store_true',
+                        help='run a mini test')
     args = parser.parse_args()
     if args.seed != None:
         random.seed(args.seed)
     deck = D.Deck()
     f = Foundation()
     i = args.interval
+    if args.minitest:
+        c1 = C.Card(1, C.Suits.CLUB)
+        print(f'{c1}')
+        c2 = C.Card(2, C.Suits.CLUB)
+        print(f'{c1}')
+        s2 = C.Card(2, C.Suits.SPADE)
+        print(f'{c1}')
+        assert f.add_card(c1), f'failed to add {c1}'
+        assert f.add_card(c2),  f'failed to add {c2}'
+        assert not f.add_card(s2),  f'failed to add {c2}'
+        stack = f.stack(C.Suits.CLUB)
+        print(f'F:{C.Card.symbol(C.Suits.CLUB)}: {C.cards_to_str(stack)}')
+        input('check output')
+        sys.exit(0)
+    c = c.Card(1, Suits.CLUB)
     print(f'Start Not Won?: {f.game_won()}')
     for s in C.Suits:
         print(f'{f.top_card_str(s)}: ', end='')
