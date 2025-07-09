@@ -255,9 +255,13 @@ if __name__ == '__main__':
 
     while True:
         while not _foundation.game_won():
-            cmdi, cmd_args = psc.parse_sol_cmds()
-            print(f'Sparse_sol_cmds.py*LOOP: {cmdi}, {cmd_args}')
-            _cmd_table[cmdi](cmd_args)
+            try:
+                sol_cmd = psc.parse_sol_cmds()
+            except psc.InvalidCmd as e_ic:
+                print(e_ic)
+                continue
+            print(f'LOOP: {sol_cmd}')
+            _cmd_table[sol_cmd.cmd](sol_cmd.cargs)
             print_table(args.show_hidden)
 
         print('Congratulations! You\'ve won!')

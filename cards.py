@@ -25,7 +25,6 @@ class Suits(enum.IntEnum):
     CLUB = enum.auto()
 
 # define min_suit and max_suit to avoid errors of the other changes.
-
 _min_suit = min(Suits).value
 _max_suit = max(Suits).value
 
@@ -35,27 +34,17 @@ def min_suit() -> int:
 def max_suit() -> int:
     return _max_suit
 
-_ace_value = 1
-_king_value = 13
-#_suit_range = {1, 4} # Spades, hearts, diamonds, clubs
+ace = 1
+king = 13
 
 _card_map = {1:'A', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7',
                8:'8', 9:'9', 10:'10', 11:'J', 12:'Q', 13:'K'}
 
-_range = {_ace_value, _king_value + 1} # i.e, Ace to King, or 1 to 13
+_range = {ace, king + 1} # i.e, Ace to King, or 1 to 13
 def card_range():
     return _range
 
 class Card():
-
-    #@property
-    def ace():
-        return _ace_value
-
-    #@property
-    def king():
-        return _king_value
-
     _suit_map = {
         Suits.SPADE : 'spade',
         Suits.HEART : 'heart',
@@ -63,7 +52,6 @@ class Card():
         Suits.CLUB : 'club',
     }
 
-    #Suits = {'club', 'diamond', 'spade', 'heart'}
     RedSuits = {Suits.DIAMOND, Suits.HEART}
     BlackSuits = {Suits.SPADE, Suits.CLUB}
     Symbols = {Suits.SPADE:'\u2660',
@@ -76,7 +64,7 @@ class Card():
         return f'{color}{Card.Symbols[s]}{COLOR_NONE}'
 
     def __init__(self, value: int, suit: Suits):
-        assert (value >= _ace_value) and (value <= _king_value), \
+        assert (value >= ace) and (value <= king), \
                 f'Bad card {value=}'
         self._name = _card_map[value]
         self._suit = suit
@@ -155,6 +143,12 @@ if __name__ == '__main__':
     parser.add_argument('--random', '-r',
                         type=int,
                         help='number between 1 and 13')
+    parser.add_argument('--a',
+                        action='store_true',
+                        help='ace test')
+    parser.add_argument('--k',
+                        action='store_true',
+                        help='king test')
     args = parser.parse_args()
 
     for s in Suits:
@@ -163,7 +157,7 @@ if __name__ == '__main__':
             #print(f'{c}:{s} -> {acard},', end=' ')
             print(f'{acard},', end=' ')
         print()
-    print(f'{Card.ace()=} to {Card.king()=}')
+    print(f'ace:{ace} to king:{king}')
     print(f'{min_suit()=} to {max_suit()=}')
     try:
         xc = Card(0, Suits.SPADE)
@@ -175,7 +169,7 @@ if __name__ == '__main__':
         print(f'got hi: {e}')
 
     if args.random:
-        if (args.random < Card.ace()) or (args.random > Card.king()):
+        if (args.random < ace) or (args.random > king):
             print(f'bad card value: {args.random}')
             args.random = Card.king()
         numcards = random.randint(1, args.random)

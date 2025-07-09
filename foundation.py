@@ -40,12 +40,16 @@ class Foundation():
         '''                                       
         print(f'f.ad-new: {card}')
         stack = self._stacks[card.suit] # get suit stack
+        print(f'f.ad-new to: {stack}')
         if not stack:
             # if the foundation stack is empty we can only add an Ace
-            if card.value == C.Card.ace():
+            print(f'f.ad-new: {card.value} =? {C.ace}')
+            if card.value == C.ace:
+                print(f'f.ad-new found: {C.ace}')
                 stack.append(card)
                 return True
             else:
+                print(f'f.ad-new NOT found: {C.ace}')
                 return False
         # stack not empty, so the rule is that the bottom if the stack is
         # one less then new card
@@ -77,7 +81,7 @@ class Foundation():
         if any(not s for s in self._stacks.values()):
             return False
         # return true iff all stacks have a king as the top card.
-        b_all = all(s[-1].value == C.Card.king() for s in self._stacks.values())
+        b_all = all(s[-1].value == C.king for s in self._stacks.values())
         return b_all
 
 def print_foundation(f: Foundation) -> None:
@@ -108,9 +112,9 @@ if __name__ == '__main__':
         c1 = C.Card(1, C.Suits.CLUB)
         print(f'{c1}')
         c2 = C.Card(2, C.Suits.CLUB)
-        print(f'{c1}')
+        print(f'{c2}')
         s2 = C.Card(2, C.Suits.SPADE)
-        print(f'{c1}')
+        print(f'{s2}')
         assert f.add_card(c1), f'failed to add {c1}'
         assert f.add_card(c2),  f'failed to add {c2}'
         assert not f.add_card(s2),  f'failed to add {c2}'
@@ -118,7 +122,8 @@ if __name__ == '__main__':
         print(f'F:{C.Card.symbol(C.Suits.CLUB)}: {C.cards_to_str(stack)}')
         input('check output')
         sys.exit(0)
-    c = c.Card(1, Suits.CLUB)
+
+    c = C.Card(1, C.Suits.CLUB)
     print(f'Start Not Won?: {f.game_won()}')
     for s in C.Suits:
         print(f'{f.top_card_str(s)}: ', end='')

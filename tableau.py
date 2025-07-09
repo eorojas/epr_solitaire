@@ -83,7 +83,7 @@ class Tableau():
             True iff it was attached, else False
         '''
         column_cards = self._flipped[dstc]
-        if not column_cards and card.value == C.king_value:
+        if not column_cards and card.value == C.king:
             column_cards.append(card)
             return True
         attach_card = column_cards[-1]
@@ -113,7 +113,7 @@ class Tableau():
         #column_cards = self._flipped[column]
         print(f'T.addC: to {C.cards_to_str(column)}')
         # check of if the colume is empty and the is a king list.
-        if not column and clist[0].value == C.king_value:
+        if not column and clist[0].value == C.king:
             column.extend(clist)
             return True
         #if not column_cards:
